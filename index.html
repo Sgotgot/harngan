@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>หารกัน</title>
-<meta name="theme-color" content="#fcfcfb" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121312" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101210" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="หารกัน">
@@ -17,292 +17,152 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
 <style>
-/* Minimal: one column, no cards. Hairlines and whitespace separate sections; color only for the two names and the green settle dot. */
+/* Clear layout: each job gets its own labeled card, top to bottom —
+   ยอดค้าง (who owes) → เพิ่มรายจ่าย (add) → รายการวันนี้ (today's list) → ปฏิทิน → วันก่อนหน้า.
+   Every control has a visible label; choices are side-by-side buttons, never hidden toggles. */
 :root{
-  --bg:#fcfcfb; --surface:#fcfcfb; --sunk:#f1f2f0; --line:#e6e7e4;
-  --fg:#1b1c1a; --muted:#8a8c87; --accent:#1f8a5b; --accent-fg:#ffffff; --accent-soft:#e3f2ea;
+  --bg:#f3f4f1; --card:#ffffff; --sunk:#eef0ec; --line:#e2e5df; --field:#ffffff; --field-line:#cfd4cc;
+  --fg:#1d211d; --muted:#6b736b; --accent:#1f8a5b; --accent-fg:#ffffff; --accent-soft:#e1f2e8;
   --minus:#c0392b; --minus-soft:#fbeceb;
-  --pa:#d23a32; --pb:#2a5bd7;
+  --pa:#d23a32; --pa-soft:#fbe9e7; --pb:#2a5bd7; --pb-soft:#e8eefc;
   --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:16px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121312; --surface:#121312; --sunk:#1d1e1c; --line:#262725;
-  --fg:#ecedea; --muted:#7f817c; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
+  --bg:#101210; --card:#191c19; --sunk:#222622; --line:#2b302b; --field:#141714; --field-line:#3a413a;
+  --fg:#eceeea; --muted:#9aa39a; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
   --minus:#f07a6c; --minus-soft:#33201d;
-  --pa:#ff7a70; --pb:#7fa2ff; color-scheme:dark}}
+  --pa:#ff7a70; --pa-soft:#3a1f1d; --pb:#7fa2ff; --pb-soft:#1d2640; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121312; --surface:#121312; --sunk:#1d1e1c; --line:#262725;
-  --fg:#ecedea; --muted:#7f817c; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
+  --bg:#101210; --card:#191c19; --sunk:#222622; --line:#2b302b; --field:#141714; --field-line:#3a413a;
+  --fg:#eceeea; --muted:#9aa39a; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
   --minus:#f07a6c; --minus-soft:#33201d;
-  --pa:#ff7a70; --pb:#7fa2ff; color-scheme:dark}
+  --pa:#ff7a70; --pa-soft:#3a1f1d; --pb:#7fa2ff; --pb-soft:#1d2640; color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
-.wrap{max-width:520px;margin:0 auto;padding-block:28px 72px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
-h1,h2,h3{margin:0;line-height:1.25;font-weight:600}
-h2{font-size:.8rem;color:var(--muted);font-weight:500}
+body{margin:0;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:520px;margin:0 auto;padding-block:16px 64px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{margin:0;line-height:1.3}
+h2{font-size:1.05rem;font-weight:600}
 .num{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
-.p-a{color:var(--pa);font-weight:500}.p-b{color:var(--pb);font-weight:500}
-.label{font-size:.75rem;color:var(--muted)}
+.p-a{color:var(--pa);font-weight:600}.p-b{color:var(--pb);font-weight:600}
+.label,.flabel{font-size:.85rem;color:var(--muted);font-weight:500}
+.hint{margin:0;font-size:.8rem;color:var(--muted)}
 
 button,input{font:inherit;color:inherit}
-button{cursor:pointer;border:none;background:transparent;border-radius:8px;padding:8px 12px;min-height:40px}
-button:hover{background:var(--sunk)}
-button.primary{background:var(--fg);color:var(--bg);font-weight:500}
-button.primary:hover{opacity:.85;background:var(--fg)}
-button.ghost{color:var(--muted);padding:4px 8px;min-height:32px}
-button.ghost:hover{color:var(--fg)}
+button{cursor:pointer;border:1px solid var(--field-line);background:var(--card);border-radius:12px;padding:8px 14px;min-height:44px}
+button:hover{border-color:var(--fg)}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+button.primary:hover{filter:brightness(1.05)}
+button.block{width:100%;min-height:50px;font-size:1.05rem}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:6px 10px;min-height:40px}
+button.ghost:hover{color:var(--fg);background:var(--sunk)}
 button.danger{color:var(--minus)}
-button:disabled{opacity:.35;cursor:not-allowed;background:transparent}
-:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-input[type=text],input[type=number]{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:6px 2px;min-height:40px;width:100%;min-width:0}
-input:focus{outline:none;border-bottom-color:var(--fg)}
-input::placeholder{color:var(--muted)}
+button:disabled{opacity:.4;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+input[type=text],input[type=number]{background:var(--field);border:1px solid var(--field-line);border-radius:12px;padding:10px 12px;min-height:48px;width:100%;min-width:0;font-size:1rem}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input::placeholder{color:var(--muted);opacity:.8}
 
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand h1{font-size:1.1rem;font-weight:600;letter-spacing:.01em}
-.brand .label{display:none}
-.banner{font-size:.82rem;color:var(--muted)}
-.banner.warn{color:var(--minus)}
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px}
+.brand{display:flex;flex-direction:column}
+.brand h1{font-size:1.5rem;font-weight:700}
+.brand .label{font-size:.8rem}
+.banner{font-size:.85rem;padding:10px 12px;border-radius:12px;background:var(--sunk);color:var(--muted)}
+.banner.warn{background:var(--minus-soft);color:var(--minus)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card-head .total{font-weight:600;font-size:1.05rem}
 
 /* balance */
-.slip{display:flex;flex-direction:column;gap:14px}
-.owe{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.owe .big{font-size:1rem}
-.owe .amt{font-size:2rem;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.slip > .label{display:none}
-.slip button{padding:0;min-height:32px;color:var(--accent);font-size:.88rem}
-.slip button:hover{background:transparent;text-decoration:underline}
+.owe-line{margin:0;font-size:1.05rem}
+.owe-amt{font-size:2.2rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.owe-zero{margin:0;font-size:1.1rem;color:var(--accent);font-weight:600}
+.settle-ask{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:var(--accent-soft)}
+.settle-ask .btns{display:flex;gap:8px}
+.settle-ask .btns button{flex:1}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stats div{display:flex;flex-direction:column;min-width:0}
-.stats .num{font-size:clamp(.8rem,3.4vw,.95rem);overflow-wrap:anywhere}
+.stats div{display:flex;flex-direction:column;gap:2px;background:var(--sunk);border-radius:12px;padding:10px;min-width:0}
+.stats .label{font-size:.75rem}
+.stats .num{font-weight:600;font-size:clamp(.85rem,3.6vw,1rem);overflow-wrap:anywhere}
 
-/* day */
-.day{display:flex;flex-direction:column}
-.day-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:6px}
-.day-head h3{font-size:.95rem;font-weight:500}
-.day-head .num{color:var(--muted)}
-.datenav{display:flex;align-items:center;gap:0;min-width:0;margin-left:-10px}
-.datenav button{min-height:40px;min-width:36px;padding:2px 8px;color:var(--muted)}
-.meal{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
-.meal-name{font-size:.82rem;color:var(--muted);display:flex;align-items:flex-start;gap:6px;padding-top:2px}
-.meal-body{display:flex;flex-direction:column;gap:8px;min-width:0}
-.mi{width:16px;height:16px;vertical-align:-3px;flex:none;color:var(--muted)}
-.seg .mi{margin-right:6px}
-.items{display:flex;flex-direction:column;gap:2px}
-.items:empty{display:none}
-.item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
-.item .t{min-width:0;overflow-wrap:anywhere}
-.item .t small{display:block;color:var(--muted);font-size:.78rem;line-height:1.35}
-.item .a{font-variant-numeric:tabular-nums}
-.item.tap{grid-template-columns:1fr auto;text-align:left;padding:4px 6px;margin:0 -6px;min-height:0;width:calc(100% + 12px);border-radius:6px}
-.edit{display:flex;flex-direction:column;gap:10px;padding:10px 0 12px}
-.edit-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.none{color:var(--line)}
-
-/* add */
-.add{display:flex;flex-direction:column;gap:10px;padding:4px 0 18px}
-.seg{display:flex;gap:4px}
-.seg button{flex:1;min-height:36px;padding:4px 6px;color:var(--muted);border-radius:999px}
-.seg button[aria-pressed=true]{background:var(--sunk);color:var(--fg);font-weight:500}
-.seg button[aria-pressed=true] .mi{color:var(--fg)}
-.add-line{display:grid;grid-template-columns:1fr 92px 40px;gap:10px;align-items:end}
-.add-line .price{text-align:right;font-variant-numeric:tabular-nums}
-.add-line .plus{padding:0;font-size:1.25rem;line-height:1;border-radius:50%;width:40px;background:var(--fg);color:var(--bg)}
-.add-line .plus:hover{opacity:.85;background:var(--fg)}
-.opts{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:.85rem}
-.pill{min-height:32px;padding:2px 0;font-size:.85rem;color:var(--muted)}
-.pill:hover{background:transparent;color:var(--fg)}
-.pill b{font-weight:500}
-.opts input{width:90px;min-height:32px;padding:2px;text-align:right;font-size:.85rem}
-.err{color:var(--minus);font-size:.8rem}
+/* add form */
+.datebar{display:flex;align-items:center;gap:6px;background:var(--sunk);border-radius:12px;padding:4px}
+.datebar .dlabel{flex:1;text-align:center;font-weight:600;min-width:0}
+.datebar button{min-width:44px;font-size:1.2rem;border-color:transparent;background:transparent}
+.datebar button:hover{background:var(--card)}
+.form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.row2{display:grid;grid-template-columns:1fr 120px;gap:10px}
+.price{text-align:right;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.seg button{min-height:46px;padding:6px 6px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:.92rem;line-height:1.2;text-align:center}
+.seg button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);font-weight:600;box-shadow:inset 0 0 0 1px var(--accent)}
+.seg .who-a[aria-pressed=true]{border-color:var(--pa);background:var(--pa-soft);box-shadow:inset 0 0 0 1px var(--pa);color:var(--pa)}
+.seg .who-b[aria-pressed=true]{border-color:var(--pb);background:var(--pb-soft);box-shadow:inset 0 0 0 1px var(--pb);color:var(--pb)}
+.pdot{width:10px;height:10px;border-radius:50%;flex:none}
+.who-a .pdot{background:var(--pa)}.who-b .pdot{background:var(--pb)}
+.mi{width:18px;height:18px;flex:none}
+.err{color:var(--minus);font-size:.88rem}
 .err:empty{display:none}
 
-.settle-row{padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
-.settle-row > span:first-child::first-letter{color:var(--accent)}
-.confirm{display:flex;gap:2px}
-.card{display:flex;flex-direction:column;gap:16px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.field{display:flex;flex-direction:column;gap:2px;min-width:0}
-.foot{display:flex;justify-content:flex-end;gap:8px}
-
-/* calendar */
-.cal{display:flex;flex-direction:column;gap:6px}
-.cal-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.cal-head h3{font-size:.85rem;font-weight:500;color:var(--muted)}
-.cal-head button{min-height:36px;min-width:36px;padding:2px 8px;color:var(--muted)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center}
-.cal-grid .wd{font-size:.7rem;color:var(--muted);padding-bottom:4px}
-.cd{position:relative;border-radius:50%;aspect-ratio:1;max-width:44px;width:100%;justify-self:center;min-height:0;padding:0;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
-.cd.out{visibility:hidden}
-.cd.future{color:var(--muted);opacity:.4}
-.cd.today{font-weight:600}
-.cd.sel{background:var(--fg);color:var(--bg)}
-.cd.sel .d.spent{background:var(--bg);opacity:.6}
-.cd .d{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%}
-.cd .d.spent{background:var(--muted);opacity:.5}
-.cd .d.paid{background:var(--accent);width:6px;height:6px;bottom:3px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);align-items:center}
-.legend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.cal-foot{font-size:.78rem;color:var(--muted)}
-.cal-foot b{color:var(--fg);font-weight:500}
-.empty{padding:20px 0;text-align:center;color:var(--muted)}
-.more{align-self:center;color:var(--muted)}
-.past{gap:0}
-
-@media (max-width:420px){.meal{grid-template-columns:52px 1fr}.add-line{grid-template-columns:1fr 80px 40px}}
-@media (prefers-reduced-motion:no-preference){button{transition:background .15s,opacity .15s,color .15s}}
-.share{display:flex;flex-direction:column;gap:8px;font-size:.85rem;color:var(--muted)}
-.share code{display:block;padding:8px 10px;background:var(--sunk);color:var(--fg);border-radius:8px;overflow-wrap:anywhere;user-select:all;font-size:.8rem;font-family:inherit}
-.share .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-</style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
-<style>
-/* Minimal: one column, no cards. Hairlines and whitespace separate sections; color only for the two names and the green settle dot. */
-:root{
-  --bg:#fcfcfb; --surface:#fcfcfb; --sunk:#f1f2f0; --line:#e6e7e4;
-  --fg:#1b1c1a; --muted:#8a8c87; --accent:#1f8a5b; --accent-fg:#ffffff; --accent-soft:#e3f2ea;
-  --minus:#c0392b; --minus-soft:#fbeceb;
-  --pa:#d23a32; --pb:#2a5bd7;
-  --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121312; --surface:#121312; --sunk:#1d1e1c; --line:#262725;
-  --fg:#ecedea; --muted:#7f817c; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
-  --minus:#f07a6c; --minus-soft:#33201d;
-  --pa:#ff7a70; --pb:#7fa2ff; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#121312; --surface:#121312; --sunk:#1d1e1c; --line:#262725;
-  --fg:#ecedea; --muted:#7f817c; --accent:#4fc28c; --accent-fg:#08210f; --accent-soft:#183326;
-  --minus:#f07a6c; --minus-soft:#33201d;
-  --pa:#ff7a70; --pb:#7fa2ff; color-scheme:dark}
-
-*{box-sizing:border-box}
-html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55}
-.wrap{max-width:520px;margin:0 auto;padding-block:28px 72px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
-h1,h2,h3{margin:0;line-height:1.25;font-weight:600}
-h2{font-size:.8rem;color:var(--muted);font-weight:500}
-.num{font-variant-numeric:tabular-nums}
-.muted{color:var(--muted)}
-.p-a{color:var(--pa);font-weight:500}.p-b{color:var(--pb);font-weight:500}
-.label{font-size:.75rem;color:var(--muted)}
-
-button,input{font:inherit;color:inherit}
-button{cursor:pointer;border:none;background:transparent;border-radius:8px;padding:8px 12px;min-height:40px}
-button:hover{background:var(--sunk)}
-button.primary{background:var(--fg);color:var(--bg);font-weight:500}
-button.primary:hover{opacity:.85;background:var(--fg)}
-button.ghost{color:var(--muted);padding:4px 8px;min-height:32px}
-button.ghost:hover{color:var(--fg)}
-button.danger{color:var(--minus)}
-button:disabled{opacity:.35;cursor:not-allowed;background:transparent}
-:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
-input[type=text],input[type=number]{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;padding:6px 2px;min-height:40px;width:100%;min-width:0}
-input:focus{outline:none;border-bottom-color:var(--fg)}
-input::placeholder{color:var(--muted)}
-
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.brand h1{font-size:1.1rem;font-weight:600;letter-spacing:.01em}
-.brand .label{display:none}
-.banner{font-size:.82rem;color:var(--muted)}
-.banner.warn{color:var(--minus)}
-
-/* balance */
-.slip{display:flex;flex-direction:column;gap:14px}
-.owe{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.owe .big{font-size:1rem}
-.owe .amt{font-size:2rem;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-.slip > .label{display:none}
-.slip button{padding:0;min-height:32px;color:var(--accent);font-size:.88rem}
-.slip button:hover{background:transparent;text-decoration:underline}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stats div{display:flex;flex-direction:column;min-width:0}
-.stats .num{font-size:clamp(.8rem,3.4vw,.95rem);overflow-wrap:anywhere}
-
-/* day */
-.day{display:flex;flex-direction:column}
-.day-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:6px}
-.day-head h3{font-size:.95rem;font-weight:500}
-.day-head .num{color:var(--muted)}
-.datenav{display:flex;align-items:center;gap:0;min-width:0;margin-left:-10px}
-.datenav button{min-height:40px;min-width:36px;padding:2px 8px;color:var(--muted)}
-.meal{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
-.meal-name{font-size:.82rem;color:var(--muted);display:flex;align-items:flex-start;gap:6px;padding-top:2px}
-.meal-body{display:flex;flex-direction:column;gap:8px;min-width:0}
-.mi{width:16px;height:16px;vertical-align:-3px;flex:none;color:var(--muted)}
-.seg .mi{margin-right:6px}
-.items{display:flex;flex-direction:column;gap:2px}
-.items:empty{display:none}
-.item{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+/* today's list */
+.meal{display:flex;flex-direction:column;gap:4px;padding-top:12px;border-top:1px solid var(--line)}
+.meal:first-child{border-top:none;padding-top:0}
+.meal-name{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;color:var(--muted)}
+.meal-name .mi{width:16px;height:16px}
+.items{display:flex;flex-direction:column;gap:6px}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
 .item .t{min-width:0;overflow-wrap:anywhere}
-.item .t small{display:block;color:var(--muted);font-size:.78rem;line-height:1.35}
-.item .a{font-variant-numeric:tabular-nums}
-.item.tap{grid-template-columns:1fr auto;text-align:left;padding:4px 6px;margin:0 -6px;min-height:0;width:calc(100% + 12px);border-radius:6px}
-.edit{display:flex;flex-direction:column;gap:10px;padding:10px 0 12px}
+.item .t small{display:block;color:var(--muted);font-size:.8rem;line-height:1.35}
+.item .a{font-weight:600;font-variant-numeric:tabular-nums}
+.item.tap{text-align:left;background:var(--sunk);border:1px solid transparent;border-radius:12px;padding:10px 12px;min-height:0;width:100%}
+.item.tap:hover{border-color:var(--field-line)}
+.none{font-size:.85rem;color:var(--muted);opacity:.7;padding:2px 0}
+.edit{display:flex;flex-direction:column;gap:12px;padding:14px;border:2px solid var(--accent);border-radius:14px;background:var(--card)}
 .edit-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.none{color:var(--line)}
-
-/* add */
-.add{display:flex;flex-direction:column;gap:10px;padding:4px 0 18px}
-.seg{display:flex;gap:4px}
-.seg button{flex:1;min-height:36px;padding:4px 6px;color:var(--muted);border-radius:999px}
-.seg button[aria-pressed=true]{background:var(--sunk);color:var(--fg);font-weight:500}
-.seg button[aria-pressed=true] .mi{color:var(--fg)}
-.add-line{display:grid;grid-template-columns:1fr 92px 40px;gap:10px;align-items:end}
-.add-line .price{text-align:right;font-variant-numeric:tabular-nums}
-.add-line .plus{padding:0;font-size:1.25rem;line-height:1;border-radius:50%;width:40px;background:var(--fg);color:var(--bg)}
-.add-line .plus:hover{opacity:.85;background:var(--fg)}
-.opts{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;font-size:.85rem}
-.pill{min-height:32px;padding:2px 0;font-size:.85rem;color:var(--muted)}
-.pill:hover{background:transparent;color:var(--fg)}
-.pill b{font-weight:500}
-.opts input{width:90px;min-height:32px;padding:2px;text-align:right;font-size:.85rem}
-.err{color:var(--minus);font-size:.8rem}
-.err:empty{display:none}
-
-.settle-row{padding:10px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;font-size:.85rem;color:var(--muted)}
-.settle-row > span:first-child::first-letter{color:var(--accent)}
-.confirm{display:flex;gap:2px}
-.card{display:flex;flex-direction:column;gap:16px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.field{display:flex;flex-direction:column;gap:2px;min-width:0}
-.foot{display:flex;justify-content:flex-end;gap:8px}
+.edit-foot .r{display:flex;gap:8px}
+.settle-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:.9rem}
+.confirm{display:flex;gap:6px}
 
 /* calendar */
-.cal{display:flex;flex-direction:column;gap:6px}
 .cal-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.cal-head h3{font-size:.85rem;font-weight:500;color:var(--muted)}
-.cal-head button{min-height:36px;min-width:36px;padding:2px 8px;color:var(--muted)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center}
-.cal-grid .wd{font-size:.7rem;color:var(--muted);padding-bottom:4px}
-.cd{position:relative;border-radius:50%;aspect-ratio:1;max-width:44px;width:100%;justify-self:center;min-height:0;padding:0;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.cal-head h3{font-size:.95rem;font-weight:600}
+.cal-head button{min-width:44px;font-size:1.2rem;border-color:transparent;background:transparent}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-grid .wd{font-size:.75rem;color:var(--muted);padding-bottom:4px}
+.cd{position:relative;border:1px solid transparent;background:transparent;border-radius:10px;min-height:44px;padding:4px 0 12px;font-size:.9rem;display:flex;justify-content:center;font-variant-numeric:tabular-nums}
+.cd:hover{background:var(--sunk);border-color:transparent}
 .cd.out{visibility:hidden}
 .cd.future{color:var(--muted);opacity:.4}
-.cd.today{font-weight:600}
-.cd.sel{background:var(--fg);color:var(--bg)}
-.cd.sel .d.spent{background:var(--bg);opacity:.6}
-.cd .d{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%}
-.cd .d.spent{background:var(--muted);opacity:.5}
-.cd .d.paid{background:var(--accent);width:6px;height:6px;bottom:3px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.75rem;color:var(--muted);align-items:center}
-.legend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle}
-.cal-foot{font-size:.78rem;color:var(--muted)}
-.cal-foot b{color:var(--fg);font-weight:500}
-.empty{padding:20px 0;text-align:center;color:var(--muted)}
-.more{align-self:center;color:var(--muted)}
-.past{gap:0}
+.cd.today{border-color:var(--field-line);font-weight:600}
+.cd.sel{background:var(--fg);color:var(--card)}
+.cd .d{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%}
+.cd .d.spent{background:var(--muted);opacity:.55}
+.cd.sel .d.spent{background:var(--card)}
+.cd .d.paid{background:var(--accent);width:9px;height:9px;bottom:4px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);align-items:center}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.cal-foot{font-size:.85rem;color:var(--muted)}
+.cal-foot b{color:var(--fg);font-weight:600}
 
-@media (max-width:420px){.meal{grid-template-columns:52px 1fr}.add-line{grid-template-columns:1fr 80px 40px}}
-@media (prefers-reduced-motion:no-preference){button{transition:background .15s,opacity .15s,color .15s}}
-.share{display:flex;flex-direction:column;gap:8px;font-size:.85rem;color:var(--muted)}
-.share code{display:block;padding:8px 10px;background:var(--sunk);color:var(--fg);border-radius:8px;overflow-wrap:anywhere;user-select:all;font-size:.8rem;font-family:inherit}
+/* names / share / misc */
+.foot{display:flex;justify-content:flex-end;gap:8px}
+.share{display:flex;flex-direction:column;gap:8px;font-size:.88rem;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.share code{display:block;padding:10px 12px;background:var(--sunk);color:var(--fg);border-radius:10px;overflow-wrap:anywhere;user-select:all;font-size:.82rem;font-family:inherit}
 .share .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty{padding:20px 0;text-align:center;color:var(--muted)}
+.more{align-self:center}
+.sec-title{font-size:.95rem;font-weight:600;color:var(--muted);padding:6px 4px 0}
+
+@media (max-width:380px){.row2{grid-template-columns:1fr 100px}.seg button{font-size:.85rem}}
+@media (prefers-reduced-motion:no-preference){button{transition:border-color .15s,background .15s}}
 </style>
 
 <script>window.API_URL="https://script.google.com/macros/s/AKfycbxr-5VZnaQwFfz0EXe-smtkN0_zaZG1hd2Jrit-u_xkAoGU47jtQIA0xcTpfMP8bUHMYQ/exec";</script>
@@ -310,12 +170,12 @@ input::placeholder{color:var(--muted)}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><span class="label">ค่าใช้จ่ายประจำวัน</span><h1>หาร<span>กัน</span></h1></div>
-    <span style="display:flex;gap:2px"><button class="ghost" id="shareBtn" hidden>ชวนอีกคน</button><button class="ghost" id="namesBtn" hidden>แก้ชื่อ</button></span>
+    <div class="brand"><h1>หารกัน</h1><span class="label">ค่าใช้จ่ายประจำวันของเราสองคน</span></div>
+    <span style="display:flex;gap:2px"><button class="ghost" id="shareBtn" hidden>ส่งลิงก์</button><button class="ghost" id="namesBtn" hidden>แก้ชื่อ</button></span>
   </header>
   <div id="banner" class="banner" hidden></div>
   <div id="sharePanel" class="share" hidden></div>
-  <main id="main" style="display:flex;flex-direction:column;gap:32px"><div class="empty">กำลังโหลด…</div></main>
+  <main id="main" style="display:flex;flex-direction:column;gap:14px"><div class="empty">กำลังโหลด…</div></main>
 </div>
 
 <script>
@@ -435,7 +295,7 @@ function render(){
   const m=$("#main");
   if(S.config===undefined)return;
   if(!S.config||S.editNames){m.innerHTML=S.readOnly?`<div class="empty">ยังไม่ได้ตั้งค่า รอเจ้าของใส่ชื่อทั้งสองคนก่อน</div>`:namesForm();$("#n1")?.focus();return}
-  m.innerHTML=`<section id="secSlip"></section><section id="secSheet"></section><section id="secCal"></section><section id="secDays" style="display:flex;flex-direction:column;gap:24px"></section>`;
+  m.innerHTML=`<section id="secSlip"></section><section id="secSheet"></section><section id="secCal"></section><section id="secDays" style="display:flex;flex-direction:column;gap:14px"></section>`;
   renderSlip();renderCal();renderSheet();renderDays();
 }
 function refreshData(){
@@ -463,7 +323,8 @@ function renderCal(){
   }
   const paidDays=Object.keys(paid).sort();
   const last=S.entries.filter(e=>e.kind==="settle").map(e=>e.date).sort().pop();
-  el.innerHTML=`<div class="cal">
+  el.innerHTML=`<div class="card cal">
+    <div class="card-head"><h2>ปฏิทินวันเคลียร์เงิน</h2></div>
     <div class="cal-head"><button class="ghost" id="calPrev" aria-label="เดือนก่อน">‹</button><h3>${esc(title)}</h3><button class="ghost" id="calNext" aria-label="เดือนถัดไป"${S.calMonth>=t.slice(0,7)?" disabled":""}>›</button></div>
     <div class="cal-grid">${["อา","จ","อ","พ","พฤ","ศ","ส"].map(w=>`<span class="wd">${w}</span>`).join("")}${cells}</div>
     <div class="legend"><span><i style="background:var(--accent)"></i>วันที่เคลียร์เงินแล้ว</span><span><i style="background:var(--muted);opacity:.5"></i>มีรายจ่าย</span></div>
@@ -474,7 +335,7 @@ function renderCal(){
 function namesForm(){
   const c=S.config&&S.config.names||{};
   return `<div class="card"><h2>${S.config?"แก้ชื่อ":"ใช้กันสองคน ใครบ้าง?"}</h2>
-    <div class="row2">
+    <div class="row2" style="grid-template-columns:1fr 1fr">
       <div class="field"><label class="label" for="n1">คนที่ 1</label><input type="text" id="n1" maxlength="20" value="${esc(c.a||"")}" placeholder="เช่น ต้น"></div>
       <div class="field"><label class="label" for="n2">คนที่ 2</label><input type="text" id="n2" maxlength="20" value="${esc(c.b||"")}" placeholder="เช่น มายด์"></div>
     </div><div class="err" id="nErr"></div>
@@ -488,14 +349,17 @@ function renderSlip(){
   const exp=S.entries.filter(e=>e.kind!=="settle");
   const sum=f=>exp.filter(f).reduce((a,e)=>a+e.amount,0);
   const debtor=n>0?"b":"a",creditor=other(debtor);
-  el.innerHTML=`<div class="slip">
-    <span class="label">ยอดค้างตอนนี้</span>
-    <div class="owe">${n===0?`<span class="big">ไม่มีใครติดใคร</span>`:
-      `<span class="big">${nmH(debtor)} ต้องโอนให้ ${nmH(creditor)}</span><span class="amt">${baht(n)}</span>`}</div>
-    ${n!==0&&!S.readOnly?(S.confirmSettle?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>${nmH(debtor)} โอน ${baht(n)} แล้วใช่ไหม?</span><button id="settleYes">ใช่ เคลียร์เลย</button><button id="settleNo">ยังก่อน</button></div>`:`<div><button id="settleBtn">โอนแล้ว เคลียร์ยอด</button></div>`):""}
+  const action=n===0||S.readOnly?"":S.confirmSettle
+    ?`<div class="settle-ask"><span>${nmH(debtor)} โอนให้ ${nmH(creditor)} ${baht(n)} แล้วใช่ไหม?</span><div class="btns"><button class="primary" id="settleYes">ใช่ โอนแล้ว</button><button id="settleNo">ยังไม่ได้โอน</button></div></div>`
+    :`<button class="block" id="settleBtn">โอนเงินกันแล้ว กดเพื่อเคลียร์ยอด</button>`;
+  el.innerHTML=`<div class="card">
+    <div class="card-head"><h2>ยอดค้าง</h2></div>
+    ${n===0?`<p class="owe-zero">✓ เคลียร์กันครบแล้ว ไม่มีใครติดใคร</p>`
+      :`<div><p class="owe-line">${nmH(debtor)} ต้องโอนให้ ${nmH(creditor)}</p><div class="owe-amt">${baht(n)}</div></div>`}
+    ${action}
     <div class="stats">
-      <div><span class="label">วันนี้</span><span class="num">${baht(sum(e=>e.date===t))}</span></div>
-      <div><span class="label">7 วัน</span><span class="num">${baht(sum(e=>e.date>=wks&&e.date<=t))}</span></div>
+      <div><span class="label">ใช้ไปวันนี้</span><span class="num">${baht(sum(e=>e.date===t))}</span></div>
+      <div><span class="label">7 วันล่าสุด</span><span class="num">${baht(sum(e=>e.date>=wks&&e.date<=t))}</span></div>
       <div><span class="label">เดือนนี้</span><span class="num">${baht(sum(e=>(e.date||"").slice(0,7)===mon))}</span></div>
     </div></div>`;
   el._owe={n,debtor,creditor};
@@ -511,20 +375,20 @@ function itemHTML(e){
   return `<button class="item tap" data-edit="${esc(e.id)}" aria-label="แก้ ${esc(e.title||mealName(e.meal))}"><span class="t">${esc(e.title||mealName(e.meal))}<small>${how}</small></span><span class="num a">${baht(e.amount)}</span></button>`;
 }
 function editHTML(){
-  const d=S.edit,o=other(d.paid);
+  const d=S.edit;
   return `<div class="edit" id="editBox">
-    <div class="seg" role="group" aria-label="มื้อ">${PICK.map(([k,l])=>`<button data-emeal="${k}" aria-pressed="${d.meal===k}">${l}</button>`).join("")}</div>
-    <div class="add-line" style="grid-template-columns:1fr 92px">
-      <input type="text" id="eTitle" maxlength="60" value="${esc(d.title)}" placeholder="กินอะไร" aria-label="กินอะไร">
-      <input type="number" id="ePrice" class="price" inputmode="decimal" min="0" step="0.01" value="${esc(d.price)}" placeholder="บาท" aria-label="ราคา">
+    <h3 style="font-size:.95rem">แก้ไขรายการ</h3>
+    <div class="field"><span class="flabel">มื้อ</span><div class="seg">${PICK.map(([k,l])=>`<button data-emeal="${k}" aria-pressed="${d.meal===k}">${mealIcon(k)}${l}</button>`).join("")}</div></div>
+    <div class="row2">
+      <div class="field"><label class="flabel" for="eTitle">กินอะไร</label><input type="text" id="eTitle" maxlength="60" value="${esc(d.title)}" placeholder="เช่น ข้าวมันไก่"></div>
+      <div class="field"><label class="flabel" for="ePrice">ราคา (บาท)</label><input type="number" id="ePrice" class="price" inputmode="decimal" min="0" step="0.01" value="${esc(d.price)}" placeholder="0"></div>
     </div>
-    <div class="opts"><button class="pill" data-epaid><b>${nmH(d.paid)}</b> จ่าย</button><button class="pill" data-esplit>${esc(splitText(d.split,d.paid))}</button>
-      ${d.split==="custom"?`<label class="muted" for="eShare">ส่วนของ${nmH(o)}</label><input type="number" id="eShare" inputmode="decimal" min="0" step="0.01" value="${esc(d.share)}" placeholder="0">`:""}</div>
+    ${choicesHTML("e",d)}
     <div class="err" id="eErr">${esc(d.err||"")}</div>
     <div class="edit-foot">${S.confirmDel===d.id
       ?`<span class="confirm"><button class="danger" data-yes="${esc(d.id)}">ยืนยันลบ</button><button class="ghost" data-no>ไม่ลบ</button></span>`
-      :`<button class="ghost danger" data-del="${esc(d.id)}">ลบรายการ</button>`}
-      <span style="display:flex;gap:6px"><button class="ghost" data-ecancel>ยกเลิก</button><button class="primary" data-esave>บันทึก</button></span></div>
+      :`<button class="ghost danger" data-del="${esc(d.id)}">ลบรายการนี้</button>`}
+      <span class="r"><button data-ecancel>ยกเลิก</button><button class="primary" data-esave>บันทึก</button></span></div>
   </div>`;
 }
 function openEdit(id){
@@ -553,36 +417,49 @@ function delBtn(e){
 }
 function settleHTML(e){return `<div class="settle-row"><span>✓ ${nmH(e.paidBy)} โอนเคลียร์ให้ ${nmH(other(e.paidBy))}</span><span class="num">${baht(e.amount)}</span>${delBtn(e)}</div>`}
 
-function optsHTML(){
-  const r=S.f;
-  return `<button class="pill" data-toggle-paid><b>${nmH(r.paid)}</b> จ่าย</button>
-    <button class="pill" data-cycle-split>${esc(splitText(r.split,r.paid))}</button>
-    ${r.split==="custom"?`<label class="muted" for="fShare">ส่วนของ${nmH(other(r.paid))}</label><input type="number" id="fShare" inputmode="decimal" min="0" step="0.01" placeholder="0">`:""}`;
+/* who paid + how to split, shared by the add form (p="") and the edit form (p="e") */
+function choicesHTML(p,st){
+  const o=other(st.paid),payer=nmH(st.paid),oth=nmH(o);
+  const hint=st.split==="half"?`ออกคนละครึ่ง ${oth} ต้องคืนครึ่งหนึ่งให้ ${payer}`
+    :st.split==="other"?`${payer} จ่ายแทน ${oth} ต้องคืนเต็มจำนวน`
+    :`ใส่ว่า ${oth} ต้องออกเท่าไร ที่เหลือเป็นของ ${payer}`;
+  const sid=p?"eShare":"fShare";
+  return `<div class="field"><span class="flabel">ใครจ่ายเงิน</span>
+      <div class="seg">${["a","b"].map(k=>`<button class="who-${k}" data-${p}setpaid="${k}" aria-pressed="${st.paid===k}"><span class="pdot"></span>${esc(nm(k))}</button>`).join("")}</div></div>
+    <div class="field"><span class="flabel">หารยังไง</span>
+      <div class="seg"><button data-${p}setsplit="half" aria-pressed="${st.split==="half"}">หารครึ่ง</button><button data-${p}setsplit="other" aria-pressed="${st.split==="other"}">ของ${esc(nm(o))}ทั้งหมด</button><button data-${p}setsplit="custom" aria-pressed="${st.split==="custom"}">ไม่เท่ากัน</button></div>
+      <p class="hint">${hint}</p></div>
+    ${st.split==="custom"?`<div class="field"><label class="flabel" for="${sid}">ส่วนของ ${oth} (บาท)</label><input type="number" id="${sid}" class="price" inputmode="decimal" min="0" step="0.01" value="${p?esc(st.share):""}" placeholder="0"></div>`:""}`;
 }
+function optsHTML(){return choicesHTML("",S.f)}
 
 /* the editable sheet: built once per date; only items/total are refreshed on data changes */
 function renderSheet(){
   const el=$("#secSheet");if(!el)return;
   const keep=$("#fTitle")?[$("#fTitle").value,$("#fPrice").value,$("#fShare")?.value||""]:null;
   const isToday=S.date===today();
-  el.innerHTML=`<article class="day" id="sheet">
-    <div class="day-head">
-      <div class="datenav"><button class="ghost" id="prevDay" aria-label="วันก่อนหน้า">‹</button><h3>${dayLabel(S.date)}</h3><button class="ghost" id="nextDay" aria-label="วันถัดไป"${isToday?" disabled":""}>›</button></div>
-      <span style="display:flex;align-items:center;gap:6px">${isToday?"":`<button class="ghost" id="toToday">วันนี้</button>`}<span class="num" id="sheetTotal"></span></span>
-    </div>
-    ${S.readOnly?"":`<div class="add" id="addBox">
-      <div class="seg" role="group" aria-label="มื้อ">${PICK.map(([k,l])=>`<button data-meal="${k}" aria-pressed="${S.f.meal===k}">${mealIcon(k)}${l}</button>`).join("")}</div>
-      <div class="add-line">
-        <input type="text" id="fTitle" maxlength="60" placeholder="กินอะไร" aria-label="กินอะไร">
-        <input type="number" id="fPrice" class="price" inputmode="decimal" min="0" step="0.01" placeholder="บาท" aria-label="ราคา">
-        <button class="plus" id="fAdd" aria-label="บันทึก">+</button>
+  el.style.cssText="display:flex;flex-direction:column;gap:14px";
+  el.innerHTML=`${S.readOnly?"":`<div class="card" id="addCard">
+    <div class="card-head"><h2>เพิ่มรายจ่าย</h2>${isToday?"":`<button class="ghost" id="toToday">กลับไปวันนี้</button>`}</div>
+    <div class="field"><span class="flabel">วันที่</span>
+      <div class="datebar"><button id="prevDay" aria-label="วันก่อนหน้า">‹</button><span class="dlabel">${dayLabel(S.date)}</span><button id="nextDay" aria-label="วันถัดไป"${isToday?" disabled":""}>›</button></div></div>
+    <div class="form" id="addBox">
+      <div class="field"><span class="flabel">มื้อ</span><div class="seg">${PICK.map(([k,l])=>`<button data-meal="${k}" aria-pressed="${S.f.meal===k}">${mealIcon(k)}${l}</button>`).join("")}</div></div>
+      <div class="row2">
+        <div class="field"><label class="flabel" for="fTitle">กินอะไร</label><input type="text" id="fTitle" maxlength="60" placeholder="เช่น ข้าวมันไก่"></div>
+        <div class="field"><label class="flabel" for="fPrice">ราคา (บาท)</label><input type="number" id="fPrice" class="price" inputmode="decimal" min="0" step="0.01" placeholder="0"></div>
       </div>
-      <div class="opts" id="fOpts">${optsHTML()}</div>
+      <div id="fOpts" class="form">${optsHTML()}</div>
       <div class="err" id="fErr"></div>
-    </div>`}
-    <div id="sheetMeals"></div>
-    <div id="sheetSettles"></div>
-  </article>`;
+      <button class="primary block" id="fAdd">บันทึกรายจ่าย</button>
+    </div>
+  </div>`}
+  <div class="card" id="sheet">
+    <div class="card-head"><h2>${isToday?"รายการวันนี้":"รายการ "+dayLabel(S.date)}</h2><span class="num total" id="sheetTotal"></span></div>
+    <div id="sheetMeals" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div id="sheetSettles" style="display:flex;flex-direction:column;gap:6px"></div>
+    ${S.readOnly?"":`<p class="hint" id="tapHint">แตะที่รายการเพื่อแก้ไขหรือลบ</p>`}
+  </div>`;
   if(keep&&$("#fTitle")){$("#fTitle").value=keep[0];$("#fPrice").value=keep[1];if($("#fShare"))$("#fShare").value=keep[2]}
   renderSheetData();
 }
@@ -592,7 +469,8 @@ function renderSheetData(){
   $("#sheetTotal").textContent=baht(expTotal(list));
   $("#sheetMeals").innerHTML=MEALS.filter(([k])=>k!=="other"||exp.some(e=>mealKey(e.meal)==="other")).map(([k,l])=>{
     const its=exp.filter(e=>mealKey(e.meal)===k);
-    return `<div class="meal"><span class="meal-name">${mealIcon(k)}${l}</span><div class="items">${its.length?its.map(itemHTML).join(""):`<span class="none">–</span>`}</div></div>`}).join("");
+    return `<div class="meal"><span class="meal-name">${mealIcon(k)}${l}</span><div class="items">${its.length?its.map(itemHTML).join(""):`<span class="none">ยังไม่มีรายการ</span>`}</div></div>`}).join("");
+  const h=$("#tapHint");if(h)h.hidden=!exp.length;
   $("#sheetSettles").innerHTML=list.filter(e=>e.kind==="settle").map(settleHTML).join("");
 }
 
@@ -601,13 +479,13 @@ function renderDays(){
   const dates=[...new Set(S.entries.map(e=>e.date))].filter(d=>d!==S.date).sort().reverse();
   if(!dates.length){el.innerHTML="";return}
   const shown=dates.slice(0,S.days);
-  el.innerHTML=`<h2>ก่อนหน้า</h2>`+shown.map(d=>{
+  el.innerHTML=`<h2 class="sec-title">วันก่อนหน้า</h2>`+shown.map(d=>{
     const list=byDate(d),exp=list.filter(e=>e.kind!=="settle");
     const meals=MEALS.map(([k,l])=>{
       const its=exp.filter(e=>mealKey(e.meal)===k);if(!its.length)return "";
       return `<div class="meal"><span class="meal-name">${mealIcon(k)}${l}</span><div class="items">${its.map(itemHTML).join("")}</div></div>`}).join("");
-    return `<article class="day past"><div class="day-head"><h3>${dayLabel(d)}</h3><div style="display:flex;align-items:center;gap:8px"><span class="num">${baht(expTotal(list))}</span></div></div>${meals}${list.filter(e=>e.kind==="settle").map(settleHTML).join("")}</article>`;
-  }).join("")+(dates.length>S.days?`<button class="more" id="moreBtn">ดูวันก่อนหน้า</button>`:"");
+    return `<article class="card"><div class="card-head"><h2>${dayLabel(d)}</h2><span class="num total">${baht(expTotal(list))}</span></div><div style="display:flex;flex-direction:column;gap:12px">${meals}</div>${list.filter(e=>e.kind==="settle").map(settleHTML).join("")}</article>`;
+  }).join("")+(dates.length>S.days?`<button class="more" id="moreBtn">ดูวันก่อนหน้าเพิ่ม</button>`:"");
 }
 
 /* ---------- actions ---------- */
@@ -660,6 +538,16 @@ document.addEventListener("click",async e=>{
   }
   if(b.id==="fAdd"){b.disabled=true;await addEntry();b.disabled=false;return}
   if(b.dataset.meal){S.f.meal=b.dataset.meal;document.querySelectorAll("[data-meal]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.meal===S.f.meal));$("#fTitle").focus();return}
+  if(b.dataset.setpaid||b.dataset.setsplit){
+    const sh=$("#fShare")?.value||"";
+    if(b.dataset.setpaid){S.f.paid=b.dataset.setpaid;ls.set("harngan-paid",S.f.paid)}else S.f.split=b.dataset.setsplit;
+    $("#fOpts").innerHTML=optsHTML();if($("#fShare")){$("#fShare").value=sh;if(b.dataset.setsplit==="custom")$("#fShare").focus()}
+    $("#fErr").textContent="";return;
+  }
+  if(b.dataset.esetpaid||b.dataset.esetsplit){
+    if(b.dataset.esetpaid)S.edit.paid=b.dataset.esetpaid;else S.edit.split=b.dataset.esetsplit;
+    S.edit.err="";renderSheetData();renderDays();if(b.dataset.esetsplit==="custom")$("#eShare")?.focus();return;
+  }
   if(b.hasAttribute("data-toggle-paid")){const sh=$("#fShare")?.value||"";S.f.paid=other(S.f.paid);ls.set("harngan-paid",S.f.paid);$("#fOpts").innerHTML=optsHTML();if($("#fShare"))$("#fShare").value=sh;$("#fErr").textContent="";return}
   if(b.hasAttribute("data-cycle-split")){S.f.split=SPLITS[(SPLITS.indexOf(S.f.split)+1)%SPLITS.length];$("#fOpts").innerHTML=optsHTML();$("#fErr").textContent="";if(S.f.split==="custom")$("#fShare").focus();return}
   if(b.dataset.cal){setDate(b.dataset.cal);return}
